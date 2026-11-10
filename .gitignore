@@ -1,0 +1,10 @@
+*.csv
+*.py[cod]
+.DS_Store
+.pytest_cache/
+.streamlit/
+.venv/
+__pycache__/
+backend/models/*.h5
+backend/models/*.keras
+backend/models/sentiment_classes.json

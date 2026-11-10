@@ -1,0 +1,4 @@
+# Core app (works on its own with the built-in engine)
+fastapi>=0.110
+uvicorn>=0.29
+numpy>=1.26

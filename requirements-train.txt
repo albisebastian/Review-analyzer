@@ -1,0 +1,4 @@
+# Only needed to train a new model with training/train_model.py
+-r requirements-keras.txt
+pandas>=2.0
+scikit-learn>=1.3

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReviewLens · Customer Review Analyzer</title>
+  <meta name="description" content="Paste a customer review and instantly see its sentiment, how confident the analysis is, and the words behind it.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%230d9488'/%3E%3Cstop offset='1' stop-color='%232563eb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M9 17.5l4.5 4.5L23 11' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    try { var t = localStorage.getItem("reviewlens.theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <a class="brand" href="/" aria-label="ReviewLens home">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="30" height="30"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M9 17.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-name">ReviewLens</span>
+      </a>
+
+      <div class="top-actions">
+        <div class="engine-wrap">
+          <button id="engineBtn" class="pill" type="button" aria-expanded="false" aria-controls="enginePanel">
+            <span class="dot" id="engineDot" data-state="loading"></span>
+            <span id="engineLabel">Checking engine…</span>
+            <svg class="chev" viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+
+          <div id="enginePanel" class="panel" role="dialog" aria-label="Analysis engine" hidden>
+            <p class="panel-title">Analysis engine</p>
+            <div class="engine-state">
+              <span class="dot" id="panelDot"></span>
+              <div>
+                <p class="engine-name" id="panelName">—</p>
+                <p class="muted small" id="panelDesc"></p>
+              </div>
+            </div>
+            <p class="panel-error" id="panelError" hidden></p>
+
+            <div class="howto">
+              <p class="howto-title">Use your own trained model</p>
+              <ol>
+                <li>Copy your <code>.keras</code> file into <code>backend/models/</code><span class="path muted" id="modelsDir"></span></li>
+                <li>Click <strong>Reload model</strong> below (no restart needed)</li>
+              </ol>
+            </div>
+            <button id="reloadBtn" class="secondary" type="button">Reload model</button>
+          </div>
+        </div>
+
+        <button id="themeBtn" class="icon-btn" type="button" aria-label="Switch between light and dark theme">
+          <svg class="i-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <svg class="i-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Customer review analyzer</p>
+      <h1>Know how customers <span class="grad">really feel.</span></h1>
+      <p class="lede">Paste a review to see its sentiment, how confident the analysis is, and the exact words behind it.</p>
+    </section>
+
+    <section class="card composer" aria-label="Review input">
+      <label for="review" class="sr-only">Customer review</label>
+      <textarea id="review" rows="5" maxlength="5000" spellcheck="true" placeholder="Paste a customer review here…"></textarea>
+
+      <div class="composer-bar">
+        <div class="samples" role="group" aria-label="Example reviews">
+          <span class="muted small">Try an example</span>
+          <button class="chip" type="button" data-sample="positive">Happy</button>
+          <button class="chip" type="button" data-sample="mixed">Mixed</button>
+          <button class="chip" type="button" data-sample="negative">Unhappy</button>
+        </div>
+        <div class="composer-actions">
+          <span id="count" class="muted small" aria-live="off">0 / 5,000</span>
+          <button id="clearBtn" class="ghost" type="button" hidden>Clear</button>
+          <button id="analyzeBtn" class="primary" type="button">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label">Analyze review</span>
+            <kbd id="kbdHint" aria-hidden="true">Ctrl ↵</kbd>
+          </button>
+        </div>
+      </div>
+      <p id="formError" class="form-error" role="alert" hidden></p>
+    </section>
+
+    <section id="result" class="card result" data-sentiment="positive" aria-live="polite" aria-label="Analysis result" hidden>
+      <div class="verdict">
+        <div class="gauge" role="img" aria-label="Confidence">
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <defs>
+              <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" class="g1"/>
+                <stop offset="1" class="g2"/>
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="60" cy="60" r="52"/>
+            <circle class="arc" id="arc" cx="60" cy="60" r="52" transform="rotate(-90 60 60)"/>
+          </svg>
+          <div class="gauge-num"><span id="pct">0</span><span class="pct-sign">%</span></div>
+        </div>
+
+        <div class="verdict-text">
+          <span class="badge" id="badge">
+            <span class="badge-icon" id="badgeIcon" aria-hidden="true"></span>
+            <span id="verdictLabel">Positive</span>
+          </span>
+          <p id="insight" class="insight"></p>
+          <p class="meta"><span id="engineTag"></span><span aria-hidden="true"> · </span><span id="wordCount"></span></p>
+        </div>
+      </div>
+
+      <div class="detail">
+        <div class="detail-col">
+          <h2 class="h3">What drove this result</h2>
+          <p id="highlighted" class="highlighted"></p>
+          <p class="legend" id="legend">
+            <span class="lg pos" id="lgPos"><i></i>Positive signal</span>
+            <span class="lg neg" id="lgNeg"><i></i>Negative signal</span>
+          </p>
+        </div>
+        <div class="detail-col" id="topicsCol">
+          <h2 class="h3">Topics mentioned</h2>
+          <ul id="topics" class="topics"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="historySec" class="history" aria-label="Recent analyses" hidden>
+      <div class="history-head">
+        <h2 class="h3">Recent</h2>
+        <button id="clearHistory" class="ghost small" type="button">Clear history</button>
+      </div>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Built for English reviews. Nothing is saved on the server; recent items stay in this browser only.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
